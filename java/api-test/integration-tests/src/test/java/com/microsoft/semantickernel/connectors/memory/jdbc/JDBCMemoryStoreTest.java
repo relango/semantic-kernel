@@ -13,7 +13,6 @@ import com.microsoft.semantickernel.ai.embeddings.Embedding;
 import com.microsoft.semantickernel.memory.MemoryException;
 import com.microsoft.semantickernel.memory.MemoryRecord;
 import com.microsoft.semantickernel.memory.MemoryStore;
-import java.awt.*;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.ZoneId;
@@ -32,6 +31,7 @@ import reactor.util.function.Tuple2;
 
 public class JDBCMemoryStoreTest {
 
+    private static JDBCMemoryStore.Builder builder;
     private static MemoryStore db;
     private static int collectionNum = 0;
     private static final String NULL_ADDITIONAL_METADATA = null;
@@ -40,11 +40,10 @@ public class JDBCMemoryStoreTest {
 
     @BeforeAll
     static void setUp() throws SQLException {
-        db =
+        builder =
                 new JDBCMemoryStore.Builder()
-                        .withConnection(DriverManager.getConnection("jdbc:sqlite::memory:"))
-                        .buildAsync()
-                        .block();
+                        .withConnection(DriverManager.getConnection("jdbc:sqlite::memory:"));
+        db = builder.buildAsync().block();
     }
 
     private Collection<MemoryRecord> createBatchRecords(int numRecords) {
@@ -83,6 +82,15 @@ public class JDBCMemoryStoreTest {
 
     @Test
     void initializeDbConnectionSucceeds() {
+        assertNotNull(db);
+    }
+
+    @Test
+    void itDoesNotFailWithExistingTables() {
+        // Act
+        db = builder.buildAsync().block();
+
+        // Assert
         assertNotNull(db);
     }
 

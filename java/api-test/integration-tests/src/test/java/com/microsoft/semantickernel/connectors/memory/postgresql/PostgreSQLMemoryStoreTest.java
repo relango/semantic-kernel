@@ -1,7 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.semantickernel.connectors.memory.postgresql;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.semantickernel.ai.embeddings.Embedding;
 import com.microsoft.semantickernel.memory.MemoryException;
@@ -12,7 +18,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,6 +39,7 @@ public class PostgreSQLMemoryStoreTest {
     private static final String POSTGRES_USER = "test";
     private static final String POSTGRES_PASSWORD = "test";
 
+    private static PostgreSQLMemoryStore.Builder builder;
     private static MemoryStore db;
     private static int collectionNum = 0;
     private static final String NULL_ADDITIONAL_METADATA = null;
@@ -37,13 +48,12 @@ public class PostgreSQLMemoryStoreTest {
 
     @BeforeAll
     static void setUp() throws SQLException {
-        db =
+        builder =
                 new PostgreSQLMemoryStore.Builder()
                         .withConnection(
                                 DriverManager.getConnection(
-                                        CONTAINER.getJdbcUrl(), POSTGRES_USER, POSTGRES_PASSWORD))
-                        .buildAsync()
-                        .block();
+                                        CONTAINER.getJdbcUrl(), POSTGRES_USER, POSTGRES_PASSWORD));
+        db = builder.buildAsync().block();
     }
 
     private Collection<MemoryRecord> createBatchRecords(int numRecords) {
@@ -82,6 +92,15 @@ public class PostgreSQLMemoryStoreTest {
 
     @Test
     void initializeDbConnectionSucceeds() {
+        assertNotNull(db);
+    }
+
+    @Test
+    void itDoesNotFailWithExistingTables() {
+        // Act
+        db = builder.buildAsync().block();
+
+        // Assert
         assertNotNull(db);
     }
 

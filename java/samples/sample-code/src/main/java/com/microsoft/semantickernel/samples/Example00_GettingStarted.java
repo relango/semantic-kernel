@@ -15,20 +15,20 @@ import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.samples.syntaxexamples.SampleSkillsUtil;
 import com.microsoft.semantickernel.skilldefinition.ReadOnlyFunctionCollection;
 import com.microsoft.semantickernel.textcompletion.CompletionSKFunction;
-import reactor.core.publisher.Mono;
-
 import java.io.IOException;
+import reactor.core.publisher.Mono;
 
 /**
  * Getting started
- * <p>
- * Create a conf.properties file based on the examples files at the root of this
- * module.
  * <p>
  * <a href=
  * "https://learn.microsoft.com/en-us/azure/cognitive-services/openai/quickstart">Get
  * started with Azure OpenAI</a>
  * <a href="https://openai.com/product">Get started with OpenAI</a>
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for configuring your environment to run the examples.
  */
 public class Example00_GettingStarted {
 

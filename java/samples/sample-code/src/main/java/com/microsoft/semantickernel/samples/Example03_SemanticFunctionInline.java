@@ -8,17 +8,21 @@ package com.microsoft.semantickernel.samples;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
 import com.microsoft.semantickernel.Kernel;
+import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.connectors.ai.openai.util.OpenAIClientProvider;
 import com.microsoft.semantickernel.exceptions.ConfigurationException;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.orchestration.SKFunction;
 import com.microsoft.semantickernel.semanticfunctions.PromptTemplateConfig;
-import reactor.core.publisher.Mono;
-
 import java.io.IOException;
+import reactor.core.publisher.Mono;
 
 /**
  * Define a Semantic Function inline with Java code.
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for configuring your environment to run the examples.
  */
 public class Example03_SemanticFunctionInline {
 
@@ -35,13 +39,14 @@ public class Example03_SemanticFunctionInline {
                 .getSemanticFunctionBuilder()
                 .withPromptTemplate(prompt)
                 .withFunctionName(functionName)
-                .withCompletionConfig(
-                        new PromptTemplateConfig.CompletionConfig(
-                                0.2,
-                                0.5,
-                                0,
-                                0,
-                                2000))
+            .withRequestSettings(
+                SKBuilders.completionRequestSettings()
+                    .temperature(0.2)
+                    .topP(0.5)
+                    .maxTokens(2000)
+                    .frequencyPenalty(0)
+                    .presencePenalty(0)
+                    .build())
                 .build();
 
         Mono<SKContext> result = summarize.invokeAsync(text);
@@ -99,7 +104,7 @@ public class Example03_SemanticFunctionInline {
      * @param kernel
      */
     public static void TLDR(Kernel kernel) {
-        String propmt = """
+        String prompt = """
                 {{$input}}
 
                 Give me the TLDR in 5 words.
@@ -116,7 +121,7 @@ public class Example03_SemanticFunctionInline {
                     does not conflict with the First or Second Law.
                 """;
 
-        inlineFunction(kernel, propmt, "tldr", text);
+        inlineFunction(kernel, prompt, "tldr", text);
     }
 
     public static void run(OpenAIAsyncClient client) throws IOException {

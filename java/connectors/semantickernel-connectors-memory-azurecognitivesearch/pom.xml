@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.microsoft.semantic-kernel</groupId>
         <artifactId>semantickernel-parent</artifactId>
-        <version>0.2.10-alpha-SNAPSHOT</version>
+        <version>0.2.12-alpha-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -28,6 +28,16 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-search-documents</artifactId>
+            <exclusions>
+                <!--
+                    TODO: Remove pending a fix for:
+                        https://github.com/Azure/azure-sdk-for-java/issues/36054
+                 -->
+                <exclusion>
+                    <groupId>com.azure</groupId>
+                    <artifactId>azure-core-serializer-json-jackson</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -47,6 +57,20 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.semantic-kernel</groupId>
+            <artifactId>semantickernel-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.semantic-kernel</groupId>
+            <artifactId>semantickernel-settings-loader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.semantic-kernel</groupId>
+            <artifactId>semantickernel-connectors-ai-openai</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

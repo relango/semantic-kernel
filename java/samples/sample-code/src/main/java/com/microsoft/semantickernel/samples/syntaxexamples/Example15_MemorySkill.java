@@ -11,13 +11,20 @@ import com.microsoft.semantickernel.memory.MemoryStore;
 import com.microsoft.semantickernel.memory.VolatileMemoryStore;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.orchestration.SKFunction;
-import com.microsoft.semantickernel.semanticfunctions.PromptTemplateConfig;
+import com.microsoft.semantickernel.textcompletion.CompletionRequestSettings;
 import com.microsoft.semantickernel.textcompletion.CompletionSKFunction;
 import com.microsoft.semantickernel.textcompletion.TextCompletion;
 import java.util.List;
 import java.util.stream.Collectors;
 import reactor.core.publisher.Mono;
 
+/**
+ * Demonstrates saving and retrieving memories.
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for configuring your environment to run the examples.
+ */
 public class Example15_MemorySkill {
     private static final String MEMORY_COLLECTION_NAME = "aboutMe";
 
@@ -68,20 +75,20 @@ public class Example15_MemorySkill {
         kernel.importSkill(memorySkill, "memory");
 
         // Build a semantic function that saves info to memory
-        PromptTemplateConfig.CompletionConfig completionConfig = SKBuilders.completionConfig()
-                .temperature(0.2)
-                .topP(0.5)
-                .presencePenalty(0)
-                .frequencyPenalty(0)
-                .maxTokens(2000)
-                .build();
+      CompletionRequestSettings completionConfig = SKBuilders.completionRequestSettings()
+          .temperature(0.2)
+          .topP(0.5)
+          .presencePenalty(0)
+          .frequencyPenalty(0)
+          .maxTokens(2000)
+          .build();
 
         CompletionSKFunction saveFunctionDefinition = SKBuilders.completionFunctions()
                 .withKernel(kernel)
                 .withPromptTemplate("{{memory.save $info}}")
                 .withFunctionName("save")
                 .withDescription("save information to memory")
-                .withCompletionConfig(completionConfig)
+                .withRequestSettings(completionConfig)
                 .build();
 
         CompletionSKFunction memorySaver =
@@ -163,7 +170,7 @@ public class Example15_MemorySkill {
         CompletionSKFunction recallFunctionDefinition = SKBuilders.completionFunctions()
                 .withKernel(kernel)
                 .withPromptTemplate(prompt)
-                .withCompletionConfig(completionConfig)
+                .withRequestSettings(completionConfig)
                 .build();
 
         SKFunction<?> aboutMeOracle = kernel.registerSemanticFunction(recallFunctionDefinition);

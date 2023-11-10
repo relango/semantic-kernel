@@ -23,6 +23,7 @@ import com.azure.search.documents.models.IndexDocumentsOptions;
 import com.azure.search.documents.models.IndexingResult;
 import com.azure.search.documents.models.SearchOptions;
 import com.azure.search.documents.models.SearchQueryVector;
+import com.microsoft.semantickernel.SemanticKernelHttpSettings;
 import com.microsoft.semantickernel.ai.embeddings.Embedding;
 import com.microsoft.semantickernel.connectors.memory.azurecognitivesearch.AzureCognitiveSearchMemoryException.ErrorCodes;
 import com.microsoft.semantickernel.memory.MemoryRecord;
@@ -35,8 +36,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -47,13 +50,12 @@ import reactor.util.function.Tuples;
  * Cognitive Search {@see https://learn.microsoft.com/azure/search/search-what-is-azure-search}
  */
 public class AzureCognitiveSearchMemoryStore implements MemoryStore {
-
-    private static final String USER_AGENT = "Semantic-Kernel";
     private static final String SEARCH_CONFIG_NAME = "searchConfig";
 
     private final SearchIndexAsyncClient _adminClient;
 
     private final Map<String, SearchAsyncClient> _clientsByIndex = new ConcurrentHashMap<>();
+    private final Function<SearchDocument, MemoryRecord> memoryRecordMapper;
 
     /// <summary>
     /// Create a new instance of memory storage using Azure Cognitive Search.
@@ -74,7 +76,8 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
                         .endpoint(endpoint)
                         .credential(new AzureKeyCredential(apiKey))
                         .clientOptions(clientOptions())
-                        .buildAsyncClient());
+                        .buildAsyncClient(),
+                null);
     }
 
     /**
@@ -90,7 +93,8 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
                         .endpoint(endpoint)
                         .credential(credentials)
                         .clientOptions(clientOptions())
-                        .buildAsyncClient());
+                        .buildAsyncClient(),
+                null);
     }
 
     /**
@@ -98,8 +102,11 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
      *
      * @param searchIndexAsyncClient the Azure search documents index client to use
      */
-    public AzureCognitiveSearchMemoryStore(@Nonnull SearchIndexAsyncClient searchIndexAsyncClient) {
+    public AzureCognitiveSearchMemoryStore(
+            @Nonnull SearchIndexAsyncClient searchIndexAsyncClient,
+            @Nullable Function<SearchDocument, MemoryRecord> memoryRecordMapper) {
         this._adminClient = searchIndexAsyncClient;
+        this.memoryRecordMapper = memoryRecordMapper;
     }
 
     @Override
@@ -203,6 +210,39 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
             int limit,
             float minRelevanceScore,
             boolean withEmbedding) {
+        return getNearestMatchesAsync(
+                collectionName,
+                embedding,
+                limit,
+                minRelevanceScore,
+                withEmbedding,
+                memoryRecordMapper);
+    }
+
+    /**
+     * Gets the nearest matches to the {@link Embedding} of type {@code Float}. Does not guarantee
+     * that the collection exists.
+     *
+     * <p>If a memoryRecordMapper is provided this overrides any mapper provided when constructing
+     * this memory store.
+     *
+     * @param collectionName The name associated with a collection of embeddings.
+     * @param embedding The {@link Embedding} to compare the collection's embeddings with.
+     * @param limit The maximum number of similarity results to return.
+     * @param minRelevanceScore The minimum relevance threshold for returned results.
+     * @param withEmbedding If true, the embeddings will be returned in the memory records.
+     * @param memoryRecordMapper a mapper that controls how to map the search document to a memory
+     *     record
+     * @return A collection of tuples where item1 is a {@link MemoryRecord} and item2 is its
+     *     similarity score as a {@code Float}.
+     */
+    public Mono<Collection<Tuple2<MemoryRecord, Float>>> getNearestMatchesAsync(
+            @Nonnull String collectionName,
+            @Nonnull Embedding embedding,
+            int limit,
+            float minRelevanceScore,
+            boolean withEmbedding,
+            @Nullable Function<SearchDocument, MemoryRecord> memoryRecordMapper) {
         collectionName = normalizeIndexName(collectionName);
         SearchAsyncClient client = getSearchClient(collectionName);
 
@@ -215,12 +255,18 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
         SearchOptions searchOptions = new SearchOptions().setVectors(searchVector);
 
         return client.search(null, searchOptions)
-                .filter(result -> (double) minRelevanceScore >= result.getScore())
+                .filter(result -> (double) minRelevanceScore <= result.getScore())
                 .map(
                         result -> {
-                            MemoryRecord memoryRecord =
-                                    result.getDocument(AzureCognitiveSearchMemoryRecord.class)
-                                            .toMemoryRecord(withEmbedding);
+                            MemoryRecord memoryRecord;
+                            if (memoryRecordMapper != null) {
+                                SearchDocument doc = result.getDocument(SearchDocument.class);
+                                memoryRecord = memoryRecordMapper.apply(doc);
+                            } else {
+                                AzureCognitiveSearchMemoryRecord doc =
+                                        result.getDocument(AzureCognitiveSearchMemoryRecord.class);
+                                memoryRecord = doc.toMemoryRecord(withEmbedding);
+                            }
                             float score = (float) result.getScore();
                             return Tuples.of(memoryRecord, score);
                         })
@@ -418,7 +464,7 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
      * @param indexName Index name
      * @return Search client ready to read/write
      */
-    private SearchAsyncClient getSearchClient(@Nonnull String indexName) {
+    protected SearchAsyncClient getSearchClient(@Nonnull String indexName) {
         String normalizedIndexName = normalizeIndexName(indexName);
         return _clientsByIndex.computeIfAbsent(
                 normalizedIndexName, _adminClient::getSearchAsyncClient);
@@ -430,10 +476,9 @@ public class AzureCognitiveSearchMemoryStore implements MemoryStore {
     // https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/Azure.Core/src/DiagnosticsOptions.cs
     /// </summary>
     private static ClientOptions clientOptions() {
-        return new ClientOptions()
+        return SemanticKernelHttpSettings.getUserAgent()
                 .setTracingOptions(new TracingOptions())
-                .setMetricsOptions(new MetricsOptions())
-                .setApplicationId(USER_AGENT);
+                .setMetricsOptions(new MetricsOptions());
     }
 
     // Index names cannot contain special chars. We use this rule to replace a few common ones

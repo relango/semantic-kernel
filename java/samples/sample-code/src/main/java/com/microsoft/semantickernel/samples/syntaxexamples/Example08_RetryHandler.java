@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 package com.microsoft.semantickernel.samples.syntaxexamples;
 
+import static com.microsoft.semantickernel.SamplesConfig.DEFAULT_PROPERTIES_LOCATIONS;
+
 import com.azure.ai.openai.OpenAIAsyncClient;
 import com.azure.ai.openai.OpenAIClientBuilder;
 import com.azure.core.credential.AzureKeyCredential;
@@ -9,17 +11,20 @@ import com.azure.core.http.policy.RetryOptions;
 import com.microsoft.semantickernel.Kernel;
 import com.microsoft.semantickernel.SKBuilders;
 import com.microsoft.semantickernel.connectors.ai.openai.util.AzureOpenAISettings;
-import com.microsoft.semantickernel.connectors.ai.openai.util.SettingsMap;
 import com.microsoft.semantickernel.exceptions.ConfigurationException;
 import com.microsoft.semantickernel.orchestration.SKContext;
-import com.microsoft.semantickernel.semanticfunctions.PromptTemplateConfig;
+import com.microsoft.semantickernel.settings.SettingsMap;
 import com.microsoft.semantickernel.textcompletion.CompletionSKFunction;
 import com.microsoft.semantickernel.textcompletion.TextCompletion;
-
 import java.time.Duration;
 
-import static com.microsoft.semantickernel.SamplesConfig.DEFAULT_PROPERTIES_LOCATIONS;
-
+/**
+ * Demonstrates customizing the configuration of the Open AI client.
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for endpoint and credential configuration.
+ */
 public class Example08_RetryHandler {
 
     public static void main(String[] args) throws ConfigurationException {
@@ -84,9 +89,14 @@ public class Example08_RetryHandler {
                 .withKernel(kernel)
                 .withPromptTemplate(prompt)
                 .withFunctionName("summarize")
-                .withCompletionConfig(
-                        new PromptTemplateConfig.CompletionConfig(
-                                0.2, 0.5, 0, 0, 2000))
+            .withRequestSettings(
+                SKBuilders.completionRequestSettings()
+                    .temperature(0.2)
+                    .topP(0.5)
+                    .maxTokens(2000)
+                    .frequencyPenalty(0)
+                    .presencePenalty(0)
+                    .build())
                 .build();
 
         kernel.registerSemanticFunction(summarizeFunc);

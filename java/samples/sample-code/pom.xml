@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.microsoft.semantic-kernel</groupId>
         <artifactId>samples</artifactId>
-        <version>0.2.10-alpha-SNAPSHOT</version>
+        <version>0.2.12-alpha-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -27,6 +27,7 @@
             <artifactId>semantickernel-core</artifactId>
             <!-- TODO: scope should be runtime, but VolatileMemoryStore is an issue -->
             <!-- <scope>runtime</scope> -->
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.microsoft.semantic-kernel</groupId>
@@ -72,6 +73,14 @@
             <artifactId>jackson-core</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.semantic-kernel</groupId>
+            <artifactId>semantickernel-settings-loader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -98,7 +107,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.microsoft.semantickernel.syntaxexamples.${sample}</mainClass>
+                    <mainClass>com.microsoft.semantickernel.samples.syntaxexamples.${sample}</mainClass>
                 </configuration>
             </plugin>
         </plugins>

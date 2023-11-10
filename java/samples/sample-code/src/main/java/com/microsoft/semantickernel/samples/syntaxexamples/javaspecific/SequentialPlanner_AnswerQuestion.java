@@ -1,18 +1,28 @@
 package com.microsoft.semantickernel.samples.syntaxexamples.javaspecific;
 
 import com.azure.ai.openai.OpenAIAsyncClient;
-import com.microsoft.semantickernel.SamplesConfig;
 import com.microsoft.semantickernel.SKBuilders;
+import com.microsoft.semantickernel.SamplesConfig;
 import com.microsoft.semantickernel.exceptions.ConfigurationException;
 import com.microsoft.semantickernel.orchestration.SKContext;
 import com.microsoft.semantickernel.planner.sequentialplanner.SequentialPlanner;
 import com.microsoft.semantickernel.skilldefinition.annotations.DefineSKFunction;
 import com.microsoft.semantickernel.skilldefinition.annotations.SKFunctionInputAttribute;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Using Sequential Planner to take the input as a question and answer it finding any information needed.
+ * <p>
+ * See <a href=
+ * "https://devblogs.microsoft.com/semantic-kernel/semantic-kernel-planners-sequential-planner/">
+ * Semantic Kernel Planners: Sequential Planner</a>
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for configuring your environment to run the examples.
+ */
 public class SequentialPlanner_AnswerQuestion {
 
     public static class InformationFinder {

@@ -12,11 +12,18 @@ import com.microsoft.semantickernel.skilldefinition.annotations.SKFunctionInputA
 import com.microsoft.semantickernel.textcompletion.TextCompletion;
 import reactor.core.publisher.Mono;
 
+/**
+ * Demonstrates using skill in combination with LLM prompts.
+ * <p>
+ * Refer to the <a href=
+ * "https://github.com/microsoft/semantic-kernel/blob/experimental-java/java/samples/sample-code/README.md">
+ * README</a> for configuring your environment to run the examples.
+ */
 public class Example04_CombineLLMPromptsAndNativeCode {
 
   public static class SearchEngineSkill {
 
-    @DefineSKFunction(description = "Append the day variable", name = "search")
+    @DefineSKFunction(description = "Search for answer", name = "search")
     public Mono<String> search(
         @SKFunctionInputAttribute(description = "Text to search")
         String input) {
@@ -27,24 +34,20 @@ public class Example04_CombineLLMPromptsAndNativeCode {
   public static void main(String[] args) throws ConfigurationException {
     OpenAIAsyncClient client = SamplesConfig.getClient();
 
-        TextCompletion textCompletion = SKBuilders.textCompletion()
-                .withModelId("text-davinci-003")
+    TextCompletion textCompletion = SKBuilders.chatCompletion()
+        .withModelId("gpt-35-turbo-2")
         .withOpenAIClient(client)
         .build();
 
-        Kernel kernel = SKBuilders.kernel().withDefaultAIService(textCompletion).build();
+    Kernel kernel = SKBuilders.kernel().withDefaultAIService(textCompletion).build();
     kernel.importSkill(new SearchEngineSkill(), null);
     kernel.importSkillFromDirectory("SummarizeSkill", SampleSkillsUtil.detectSkillDirLocation(),
         "SummarizeSkill");
-
 
     // Run
     String ask = "What's the tallest building in South America?";
 
     Mono<SKContext> result =
-        kernel.runAsync(ask, kernel.getSkills().getFunction("Search", null));
-
-    result =
         kernel.runAsync(
             ask,
             kernel.getSkills().getFunction("Search", null),

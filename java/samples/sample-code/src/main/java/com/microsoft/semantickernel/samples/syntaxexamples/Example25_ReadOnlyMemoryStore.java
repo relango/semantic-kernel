@@ -6,19 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.semantickernel.ai.embeddings.Embedding;
 import com.microsoft.semantickernel.memory.MemoryRecord;
 import com.microsoft.semantickernel.memory.MemoryStore;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 /**
- * This sample provides a custom implementation of {@code MemoryStore} that is read only.
+ * Demonstrates a custom implementation of {@code MemoryStore} that is read only.
  * In this sample, the data is stored in a JSON String and deserialized into an
  * {@code MemoryRecord[]}. For this specific sample, the implementation
  * of {@code MemoryStore}  has a single collection, and thus does not need to be named.

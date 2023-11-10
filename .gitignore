@@ -412,6 +412,7 @@ FodyWeavers.xsd
 .env
 certs/
 launchSettings.json
+!samples/dotnet/MsGraphPluginsExample/Properties/launchSettings.json
 config.development.yaml
 *.development.config
 *.development.json
@@ -471,6 +472,9 @@ java/.mvn/wrapper/maven-wrapper.jar
 # Java settings
 conf.properties
 
+# Intellij configuration
+*.iml
+
 # Playwright
 playwright-report/
 
@@ -482,3 +486,6 @@ swa-cli.config.json
 
 # Semantic Kernel Tools
 /.semantic-kernel
+
+# python devcontainer
+/python/.devcontainer/*
